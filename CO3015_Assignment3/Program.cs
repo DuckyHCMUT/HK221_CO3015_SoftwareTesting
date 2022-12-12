@@ -4,11 +4,8 @@
     {
         public static void Main(string[] args)
         {
-            A01AddMenu driverA01 = new A01AddMenu();
-            driverA01.RunTest();
-
-            A02OrderAction driverA02 = new A02OrderAction();
-            driverA02.RunTest();
+            B06BlockUser driverB06 = new B06BlockUser();
+            driverB06.RunTest();
         }
     }
 }
