@@ -1,73 +1,36 @@
-﻿using OfficeOpenXml;
+﻿using CO3015_Assignment3.Utility;
+using OfficeOpenXml;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using System.Configuration;
 
 namespace CO3015_Assignment3
 {
     public class B06BlockUser
     {
-        private readonly string? _userName = ConfigurationManager.AppSettings["username"];
-        private readonly string? _password = ConfigurationManager.AppSettings["password"];
-        private readonly string? _projectDirectory;
-
         public B06BlockUser()
         {
             // Define License Context for EPPlus package
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-            _projectDirectory = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.Parent?.FullName;
-
-            if (string.IsNullOrEmpty(_projectDirectory))
-            {
-                throw new DirectoryNotFoundException($"{_projectDirectory} not found!");
-            }
         }
 
         public void RunTest()
         {
-            //TcB0601();
-            //TcB0602();
-            //TcB0603();
+            TcB0601();
+            TcB0602();
+            TcB0603();
             TcB0604();
         }
 
-        private void Login(IWebDriver driver)
+        private static void RecoverBlockedUser(IWebDriver driver)
         {
-            driver.Navigate().GoToUrl("https://e-learning.hcmut.edu.vn/my/");
-            Thread.Sleep(2000);
-
-            driver.FindElement(By.LinkText("Teachers and Students of HCMUT")).Click();
-            Thread.Sleep(2000);
-
-            driver.FindElement(By.Name("username")).SendKeys(_userName);
-            Thread.Sleep(2000);
-
-            driver.FindElement(By.Name("password")).SendKeys(_password);
-            Thread.Sleep(2000);
-
-            driver.FindElement(By.Name("submit")).Click();
-            Thread.Sleep(5000);
-        }
-        private string? GetCellDataFromExcelFile(string excelFileName, string cell)
-        {
-            using var xlPackage = new ExcelPackage(new FileInfo(
-                Path.Combine(_projectDirectory ?? throw new InvalidOperationException(), $"resource\\{excelFileName}")));
-
-            var myWorksheet = xlPackage.Workbook.Worksheets.First();
-            return myWorksheet.Cells[cell].Select(x => x.Value.ToString()).First();
-        }
-
-        private void RecoverBlockedUser(IWebDriver driver)
-        {
-            var targetId = GetCellDataFromExcelFile("B06_data.xlsx", "B3");
+            var targetId = TestingHelper.GetCellDataFromExcelFile("B06_data.xlsx", "B3");
 
             if (string.IsNullOrEmpty(targetId))
             {
                 throw new NullReferenceException("Null Target Id");
             }
 
-            Login(driver);
+            TestingHelper.Login(driver);
 
             Console.WriteLine("Restoration started");
 
@@ -78,15 +41,18 @@ namespace CO3015_Assignment3
                 .Click();
             Thread.Sleep(2000);
 
-            driver.FindElement(By.XPath($"//a[contains(@data-conversation-id, '{targetId}')]")).Click();
+            driver.FindElement(By.XPath($"//a[@data-user-id='{targetId}']")).Click();
             Thread.Sleep(2000);
 
             var requestUnblockBtnElement = driver.FindElement(By.XPath("//button[contains(@data-action, 'request-unblock')]"));
 
             if (requestUnblockBtnElement.Displayed)
             {
-                requestUnblockBtnElement.Click();
-                Thread.Sleep(2000);
+                driver.FindElement(By.Id("conversation-actions-menu-button")).Click();
+                Thread.Sleep(1000);
+
+                driver.FindElement(By.XPath("//a[contains(@data-action, 'request-unblock')]")).Click();
+                Thread.Sleep(1000);
             }
             else
             {
@@ -109,7 +75,7 @@ namespace CO3015_Assignment3
 
             try
             {
-                var targetId = GetCellDataFromExcelFile("B06_data.xlsx", "B2");
+                var targetId = TestingHelper.GetCellDataFromExcelFile("B06_data.xlsx", "B2");
 
                 if (string.IsNullOrEmpty(targetId))
                 {
@@ -118,7 +84,7 @@ namespace CO3015_Assignment3
 
                 Console.WriteLine($"Test case {nameof(TcB0601)} started");
 
-                Login(driver);
+                TestingHelper.Login(driver);
 
                 driver.FindElement(By.XPath("//a[contains(@id, 'message-drawer-toggle')]")).Click();
                 Thread.Sleep(2000);
@@ -127,7 +93,7 @@ namespace CO3015_Assignment3
                     .Click();
                 Thread.Sleep(2000);
 
-                driver.FindElement(By.XPath($"//a[contains(@data-conversation-id, '{targetId}')]")).Click();
+                driver.FindElement(By.XPath($"//a[contains(@data-user-id, '{targetId}')]")).Click();
                 Thread.Sleep(2000);
 
                 driver.FindElement(By.Id("conversation-actions-menu-button")).Click();
